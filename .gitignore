@@ -5,6 +5,7 @@
 # Android/IntelliJ
 #
 .idea
+.iml
 
 # build
 build/

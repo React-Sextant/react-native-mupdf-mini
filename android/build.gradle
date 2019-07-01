@@ -1,10 +1,13 @@
 apply plugin: 'com.android.library'
 
+buildscript {
+    repositories {
+        maven { url 'http://maven.ghostscript.com/' }
+    }
+}
+
 dependencies {
-    if (file('../jni/build.gradle').isFile())
-        api project(':jni')
-    else
-        api 'com.artifex.mupdf:fitz:1.15.0'
+
     compile "com.facebook.react:react-native:+"
 
 }
@@ -20,27 +23,4 @@ android {
         versionName '1.0'
     }
 
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            if (project.hasProperty('MAVEN_REPO')) {
-                repository(url: MAVEN_REPO)
-            } else {
-                repository(url: 'file://MAVEN')
-            }
-            pom {
-                artifactId = 'mini'
-                project {
-                    licenses {
-                        license {
-                            name 'GNU Affero General Public License'
-                            url 'https://www.gnu.org/licenses/agpl-3.0.html'
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
