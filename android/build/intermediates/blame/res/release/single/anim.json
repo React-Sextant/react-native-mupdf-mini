@@ -1,0 +1,74 @@
+[
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/catalyst_slide_up.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/react-native-0.57.8.aar/cdc55b697beab669ebf7b2b4f1ef303f/res/anim/catalyst_slide_up.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_fade_out.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_fade_out.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_fade_in.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_fade_in.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/catalyst_slide_down.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/react-native-0.57.8.aar/cdc55b697beab669ebf7b2b4f1ef303f/res/anim/catalyst_slide_down.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_slide_in_bottom.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_slide_in_bottom.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_slide_out_bottom.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_slide_out_bottom.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_shrink_fade_out_from_bottom.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_shrink_fade_out_from_bottom.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_popup_exit.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_popup_exit.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_popup_enter.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_popup_enter.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/catalyst_fade_out.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/react-native-0.57.8.aar/cdc55b697beab669ebf7b2b4f1ef303f/res/anim/catalyst_fade_out.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_slide_out_top.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_slide_out_top.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/catalyst_push_up_in.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/react-native-0.57.8.aar/cdc55b697beab669ebf7b2b4f1ef303f/res/anim/catalyst_push_up_in.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_slide_in_top.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_slide_in_top.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/catalyst_push_up_out.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/react-native-0.57.8.aar/cdc55b697beab669ebf7b2b4f1ef303f/res/anim/catalyst_push_up_out.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_tooltip_enter.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_tooltip_enter.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_grow_fade_in_from_bottom.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_grow_fade_in_from_bottom.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/abc_tooltip_exit.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/anim/abc_tooltip_exit.xml"
+    },
+    {
+        "merged": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/anim/catalyst_fade_in.xml",
+        "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/react-native-0.57.8.aar/cdc55b697beab669ebf7b2b4f1ef303f/res/anim/catalyst_fade_in.xml"
+    }
+]

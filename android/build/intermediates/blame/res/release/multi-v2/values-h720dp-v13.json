@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/values-h720dp-v13/values-h720dp-v13.xml",
+            "map": [
+                {
+                    "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/values-h720dp-v13/values-h720dp-v13.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "66",
+                        "endOffsets": "117"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/incremental/mergeReleaseResources/merged.dir/values-h720dp-v13/values-h720dp-v13.xml",
+            "map": [
+                {
+                    "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/values-h720dp-v13/values-h720dp-v13.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "66",
+                        "endOffsets": "117"
+                    }
+                }
+            ]
+        }
+    ]
+}

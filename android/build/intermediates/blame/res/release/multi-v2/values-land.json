@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/res/merged/release/values-land/values-land.xml",
+            "map": [
+                {
+                    "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/values-land/values-land.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,125,189,260",
+                        "endColumns": "69,63,70,67",
+                        "endOffsets": "120,184,255,323"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "/Users/zhijia/Desktop/1/smart_npc_rn/node_modules/react-native-pdf/android/build/intermediates/incremental/mergeReleaseResources/merged.dir/values-land/values-land.xml",
+            "map": [
+                {
+                    "source": "/Users/zhijia/.gradle/caches/transforms-1/files-1.1/appcompat-v7-27.1.1.aar/57e1d90c10dbd51351a8583f6d4d3edf/res/values-land/values-land.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,125,189,260",
+                        "endColumns": "69,63,70,67",
+                        "endOffsets": "120,184,255,323"
+                    }
+                }
+            ]
+        }
+    ]
+}
