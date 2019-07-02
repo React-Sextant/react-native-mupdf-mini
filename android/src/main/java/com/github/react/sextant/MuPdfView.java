@@ -1,6 +1,6 @@
 package com.github.react.sextant;
 
-import android.graphics.Rect;
+import android.content.SharedPreferences;
 import android.view.View;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -10,7 +10,44 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.view.GestureDetector;
 import android.view.ScaleGestureDetector;
+import android.widget.EditText;
+import android.widget.PopupMenu;
 import android.widget.Scroller;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.method.PasswordTransformationMethod;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.PopupMenu;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Stack;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 
 import com.facebook.react.bridge.NativeModule;
@@ -28,11 +65,49 @@ import com.facebook.react.common.ReactConstants;
 
 import static java.lang.String.format;
 import java.lang.ClassCastException;
+import java.util.ArrayList;
+import java.util.Stack;
+
+import com.artifex.mupdf.fitz.*;
+import com.artifex.mupdf.fitz.android.*;
 
 public class MuPdfView extends View implements GestureDetector.OnGestureListener,
         ScaleGestureDetector.OnScaleGestureListener {
     private ThemedReactContext context;
 
+
+    private final String APP = "MuPDF";
+
+
+
+    //Event props
+    protected Worker worker;
+    protected SharedPreferences prefs;
+
+    protected Document doc;
+
+    String key;
+    protected String path;
+    protected String mimetype;
+    protected byte[] buffer;
+
+    protected boolean hasLoaded;
+    protected boolean isReflowable;
+    protected boolean fitPage;
+    protected String title;
+    protected float layoutW, layoutH, layoutEm;
+    protected float displayDPI;
+
+    protected int pageCount;
+    protected int currentPage;
+    protected int searchHitPage;
+    protected String searchNeedle;
+    protected boolean stopSearch;
+    protected Stack<Integer> history;
+    protected boolean wentBack;
+
+
+    //UI props
     protected float viewScale, minScale, maxScale;
     protected Bitmap bitmap;
     protected int bitmapW, bitmapH;
@@ -86,10 +161,6 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
         errorPath.lineTo(-100, 100);
     }
 
-//    public void setActionListener(DocumentActivity l) {
-//        actionListener = l;
-//    }
-
     public void setError() {
         if (bitmap != null)
             bitmap.recycle();
@@ -123,7 +194,7 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
     public void onSizeChanged(int w, int h, int ow, int oh) {
         canvasW = w;
         canvasH = h;
-//        actionListener.onPageViewSizeChanged(w, h);
+        onPageViewSizeChanged(w, h);
     }
 
     public boolean onTouchEvent(MotionEvent event) {
@@ -145,7 +216,34 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
     }
 
     public boolean onSingleTapUp(MotionEvent e) {
-
+        boolean foundLink = false;
+        float x = e.getX();
+        float y = e.getY();
+        if (showLinks && links != null) {
+            float dx = (bitmapW <= canvasW) ? (bitmapW - canvasW) / 2 : scrollX;
+            float dy = (bitmapH <= canvasH) ? (bitmapH - canvasH) / 2 : scrollY;
+            float mx = (x + dx) / viewScale;
+            float my = (y + dy) / viewScale;
+            for (Link link : links) {
+                Rect b = link.bounds;
+                if (mx >= b.x0 && mx <= b.x1 && my >= b.y0 && my <= b.y1) {
+                    if (link.uri != null)
+                        gotoURI(link.uri);
+                    else if (link.page >= 0)
+                        gotoPage(link.page);
+                    foundLink = true;
+                    break;
+                }
+            }
+        }
+        if (!foundLink) {
+            float a = canvasW / 3;
+            float b = a * 2;
+            if (x <= a) goBackward();
+            if (x >= b) goForward();
+            if (x > a && x < b) toggleUI();
+        }
+        invalidate();
         return true;
     }
 
@@ -195,11 +293,38 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
     public void onScaleEnd(ScaleGestureDetector det) { }
 
     public void goBackward() {
-
+        scroller.forceFinished(true);
+        if (scrollY <= 0) {
+            if (scrollX <= 0) {
+                if (currentPage > 0) {
+                    wentBack = true;
+                    currentPage --;
+                    loadPage();
+                }
+                return;
+            }
+            scroller.startScroll(scrollX, scrollY, -canvasW * 9 / 10, bitmapH - canvasH - scrollY, 500);
+        } else {
+            scroller.startScroll(scrollX, scrollY, 0, -canvasH * 9 / 10, 250);
+        }
+        invalidate();
     }
 
     public void goForward() {
-
+        scroller.forceFinished(true);
+        if (scrollY + canvasH >= bitmapH) {
+            if (scrollX + canvasW >= bitmapW) {
+                if (currentPage < pageCount - 1) {
+                    currentPage ++;
+                    loadPage();
+                }
+                return;
+            }
+            scroller.startScroll(scrollX, scrollY, canvasW * 9 / 10, -scrollY, 500);
+        } else {
+            scroller.startScroll(scrollX, scrollY, 0, canvasH * 9 / 10, 250);
+        }
+        invalidate();
     }
 
     public void onDraw(Canvas canvas) {
@@ -261,4 +386,233 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
                 canvas.drawPath(path, hitPaint);
             }
     }
+
+    /**
+     * React Native Bridge Event
+     * **/
+    public void setPath(String path) {
+        this.path = path;
+
+        File file = new File(path);
+        Uri uri = Uri.fromFile(file);
+        mimetype = "application/pdf";
+        key = uri.toString();
+        if (uri.getScheme().equals("file")) {
+            title = uri.getLastPathSegment();
+            path = uri.getPath();
+        } else {
+            title = uri.toString();
+            try {
+                InputStream stm = this.context.getContentResolver().openInputStream(uri);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                byte[] buf = new byte[16384];
+                int n;
+                while ((n = stm.read(buf)) != -1)
+                    out.write(buf, 0, n);
+                out.flush();
+                buffer = out.toByteArray();
+            } catch (IOException x) {
+                Log.e(APP, x.toString());
+                Toast.makeText(this.context, x.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
+    /**
+     * Native Props
+     * **/
+    //event
+    public void gotoPage(int p) {
+        if (p >= 0 && p < pageCount && p != currentPage) {
+            history.push(currentPage);
+            currentPage = p;
+            loadPage();
+        }
+    }
+
+    public void gotoURI(String uri) {
+        Toast.makeText(this.context, uri, Toast.LENGTH_SHORT).show();
+    }
+
+    public void toggleUI() {
+//        if (navigationBar.getVisibility() == View.VISIBLE) {
+//            currentBar.setVisibility(View.GONE);
+//            navigationBar.setVisibility(View.GONE);
+//        } else {
+//            currentBar.setVisibility(View.VISIBLE);
+//            navigationBar.setVisibility(View.VISIBLE);
+//            if (currentBar == searchBar) {
+//                searchBar.requestFocus();
+//            }
+//        }
+    }
+
+    //listen
+    public void onPageViewSizeChanged(int w, int h) {
+        canvasW = w;
+        canvasH = h;
+        layoutW = canvasW * 72 / displayDPI;
+        layoutH = canvasH * 72 / displayDPI;
+        if (!hasLoaded) {
+            hasLoaded = true;
+            openDocument();
+        } else if (isReflowable) {
+            relayoutDocument();
+        } else {
+            loadPage();
+        }
+    }
+
+
+
+
+    protected void relayoutDocument() {
+//        worker.add(new Worker.Task() {
+//            public void work() {
+                try {
+                    long mark = doc.makeBookmark(currentPage);
+                    Log.i(APP, "relayout document");
+                    doc.layout(layoutW, layoutH, layoutEm);
+                    pageCount = doc.countPages();
+                    currentPage = doc.findBookmark(mark);
+                } catch (Throwable x) {
+                    pageCount = 1;
+                    currentPage = 0;
+                    throw x;
+                }
+//            }
+//            public void run() {
+                loadPage();
+//            }
+//        });
+    }
+    protected void openDocument() {
+//        worker.add(new Worker.Task() {
+            boolean needsPassword;
+//            public void work() {
+                if (path != null)
+                    doc = Document.openDocument(path);
+                else
+                    doc = Document.openDocument(buffer, mimetype);
+                needsPassword = doc.needsPassword();
+//            }
+//            public void run() {
+                if (needsPassword)
+                    askPassword("R.string.dlog_password_message");
+                else
+                    loadDocument();
+//            }
+//        });
+    }
+    //pdf password
+    protected void askPassword(String message) {
+        final EditText passwordView = new EditText(this.context);
+        passwordView.setInputType(EditorInfo.TYPE_TEXT_VARIATION_PASSWORD);
+        passwordView.setTransformationMethod(PasswordTransformationMethod.getInstance());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
+        builder.setTitle("Password:");
+        builder.setMessage(message);
+        builder.setView(passwordView);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                checkPassword(passwordView.getText().toString());
+            }
+        });
+        builder.create().show();
+    }
+    protected void checkPassword(final String password) {
+//        worker.add(new Worker.Task() {
+            boolean passwordOkay;
+//            public void work() {
+                Log.i(APP, "check password");
+                passwordOkay = doc.authenticatePassword(password);
+//            }
+//            public void run() {
+                if (passwordOkay)
+                    loadDocument();
+                else
+                    askPassword("R.string.dlog_password_retry");
+//            }
+//        });
+    }
+    protected void loadDocument() {
+//        worker.add(new Worker.Task() {
+//            public void work() {
+                try {
+                    Log.i(APP, "load document");
+                    String metaTitle = doc.getMetaData(Document.META_INFO_TITLE);
+                    if (metaTitle != null)
+                        title = metaTitle;
+                    isReflowable = doc.isReflowable();
+                    if (isReflowable) {
+                        Log.i(APP, "layout document");
+                        doc.layout(layoutW, layoutH, layoutEm);
+                    }
+                    pageCount = doc.countPages();
+                } catch (Throwable x) {
+                    doc = null;
+                    pageCount = 1;
+                    currentPage = 0;
+                    throw x;
+                }
+//            }
+//            public void run() {
+                if (currentPage < 0 || currentPage >= pageCount)
+                    currentPage = 0;
+//                titleLabel.setText(title);
+//                if (isReflowable)
+//                    layoutButton.setVisibility(View.VISIBLE);
+//                else
+//                    zoomButton.setVisibility(View.VISIBLE);
+                loadPage();
+//            }
+//        });
+    }
+    protected void loadPage() {
+        final int pageNumber = currentPage;
+
+        stopSearch = true;
+//        worker.add(new Worker.Task() {
+        Bitmap bitmap;
+        Link[] links;
+        Quad[] hits;
+//            public void work() {
+                try {
+                    Log.i(APP, "load page " + pageNumber);
+                    Page page = doc.loadPage(pageNumber);
+                    Log.i(APP, "draw page " + pageNumber);
+                    Matrix ctm;
+                    if (fitPage)
+                        ctm = AndroidDrawDevice.fitPage(page, canvasW, canvasH);
+                    else
+                        ctm = AndroidDrawDevice.fitPageWidth(page, canvasW);
+                    bitmap = AndroidDrawDevice.drawPage(page, ctm);
+                    links = page.getLinks();
+                    if (links != null)
+                        for (Link link : links)
+                            link.bounds.transform(ctm);
+                    if (searchNeedle != null) {
+                        hits = page.search(searchNeedle);
+                        if (hits != null)
+                            for (Quad hit : hits)
+                                hit.transform(ctm);
+                    }
+                } catch (Throwable x) {
+                    Log.e(APP, x.getMessage());
+                }
+//            }
+//            public void run() {
+                if (bitmap != null)
+                    setBitmap(bitmap, wentBack, links, hits);
+                else
+                    setError();
+//                pageLabel.setText((currentPage+1) + " / " + pageCount);
+//                pageSeekbar.setMax(pageCount - 1);
+//                pageSeekbar.setProgress(pageNumber);
+                wentBack = false;
+            }
+//        });
+//    }
 }

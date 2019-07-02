@@ -1,13 +1,8 @@
 apply plugin: 'com.android.library'
 
-buildscript {
-    repositories {
-        maven { url 'http://maven.ghostscript.com/' }
-    }
-}
-
 dependencies {
 
+    compile 'com.artifex.mupdf:fitz:1.15.0'
     compile "com.facebook.react:react-native:+"
 
 }

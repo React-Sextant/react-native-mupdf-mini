@@ -48,4 +48,9 @@ public class RCTMuPdfManager extends SimpleViewManager<MuPdfView> {
     public void onDropViewInstance(MuPdfView mupdfView) {
         mupdfView = null;
     }
+
+    @ReactProp(name = "path")
+    public void setPath(MuPdfView mupdfView, String path) {
+        mupdfView.setPath(path);
+    }
 }
