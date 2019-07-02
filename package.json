@@ -1,0 +1,16 @@
+{
+  "name": "react-native-mupdf",
+  "version": "1.0.0",
+  "description": "react-native-mupdf",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react",
+    "native",
+    "mupdf"
+  ],
+  "author": "1uokun",
+  "license": "ISC"
+}
