@@ -131,6 +131,9 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
     public MuPdfView(ThemedReactContext ctx, AttributeSet atts) {
         super(ctx, atts);
 
+        worker = new Worker(ctx);
+        worker.start();
+
         this.context = ctx;
         this.instance = this;
 
@@ -412,7 +415,7 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
                 out.flush();
                 buffer = out.toByteArray();
             } catch (IOException x) {
-                Log.e(APP, x.toString());
+                Log.e(APP, "setPath:"+x.toString());
                 Toast.makeText(this.context, x.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
@@ -463,13 +466,9 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
             loadPage();
         }
     }
-
-
-
-
     protected void relayoutDocument() {
-//        worker.add(new Worker.Task() {
-//            public void work() {
+        worker.add(new Worker.Task() {
+            public void work() {
                 try {
                     long mark = doc.makeBookmark(currentPage);
                     Log.i(APP, "relayout document");
@@ -481,29 +480,29 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
                     currentPage = 0;
                     throw x;
                 }
-//            }
-//            public void run() {
+            }
+            public void run() {
                 loadPage();
-//            }
-//        });
+            }
+        });
     }
     protected void openDocument() {
-//        worker.add(new Worker.Task() {
+        worker.add(new Worker.Task() {
             boolean needsPassword;
-//            public void work() {
+            public void work() {
                 if (path != null)
                     doc = Document.openDocument(path);
                 else
                     doc = Document.openDocument(buffer, mimetype);
                 needsPassword = doc.needsPassword();
-//            }
-//            public void run() {
+            }
+            public void run() {
                 if (needsPassword)
                     askPassword("R.string.dlog_password_message");
                 else
                     loadDocument();
-//            }
-//        });
+            }
+        });
     }
     //pdf password
     protected void askPassword(String message) {
@@ -523,23 +522,23 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
         builder.create().show();
     }
     protected void checkPassword(final String password) {
-//        worker.add(new Worker.Task() {
+        worker.add(new Worker.Task() {
             boolean passwordOkay;
-//            public void work() {
+            public void work() {
                 Log.i(APP, "check password");
                 passwordOkay = doc.authenticatePassword(password);
-//            }
-//            public void run() {
+            }
+            public void run() {
                 if (passwordOkay)
                     loadDocument();
                 else
                     askPassword("R.string.dlog_password_retry");
-//            }
-//        });
+            }
+        });
     }
     protected void loadDocument() {
-//        worker.add(new Worker.Task() {
-//            public void work() {
+        worker.add(new Worker.Task() {
+            public void work() {
                 try {
                     Log.i(APP, "load document");
                     String metaTitle = doc.getMetaData(Document.META_INFO_TITLE);
@@ -557,28 +556,23 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
                     currentPage = 0;
                     throw x;
                 }
-//            }
-//            public void run() {
+            }
+            public void run() {
                 if (currentPage < 0 || currentPage >= pageCount)
                     currentPage = 0;
-//                titleLabel.setText(title);
-//                if (isReflowable)
-//                    layoutButton.setVisibility(View.VISIBLE);
-//                else
-//                    zoomButton.setVisibility(View.VISIBLE);
                 loadPage();
-//            }
-//        });
+            }
+        });
     }
     protected void loadPage() {
         final int pageNumber = currentPage;
 
         stopSearch = true;
-//        worker.add(new Worker.Task() {
+        worker.add(new Worker.Task() {
         Bitmap bitmap;
         Link[] links;
         Quad[] hits;
-//            public void work() {
+            public void work() {
                 try {
                     Log.i(APP, "load page " + pageNumber);
                     Page page = doc.loadPage(pageNumber);
@@ -600,19 +594,16 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
                                 hit.transform(ctm);
                     }
                 } catch (Throwable x) {
-                    Log.e(APP, x.getMessage());
+                    Log.e(APP, "loadPage:"+x.getMessage());
                 }
-//            }
-//            public void run() {
+            }
+            public void run() {
                 if (bitmap != null)
                     setBitmap(bitmap, wentBack, links, hits);
                 else
                     setError();
-//                pageLabel.setText((currentPage+1) + " / " + pageCount);
-//                pageSeekbar.setMax(pageCount - 1);
-//                pageSeekbar.setProgress(pageNumber);
                 wentBack = false;
             }
-//        });
-//    }
+        });
+    }
 }

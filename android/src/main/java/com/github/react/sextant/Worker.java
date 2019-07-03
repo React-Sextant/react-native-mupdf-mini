@@ -1,12 +1,12 @@
 package com.github.react.sextant;
 
-import android.app.Activity;
+import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.util.concurrent.LinkedBlockingQueue;
+import com.facebook.react.bridge.UiThreadUtil;
 
-import com.facebook.react.ReactActivity;
 public class Worker implements Runnable
 {
 	public static class Task implements Runnable {
@@ -14,12 +14,12 @@ public class Worker implements Runnable
 		public void run() {} /* The 'run' method will be executed on the UI thread. */
 	}
 
-	protected ReactActivity activity;
+	protected Context context;
 	protected LinkedBlockingQueue<Task> queue;
 	protected boolean alive;
 
-	public Worker(ReactActivity act) {
-		activity = act;
+	public Worker(Context ctx) {
+		context = ctx;
 		queue = new LinkedBlockingQueue<Task>();
 	}
 
@@ -45,12 +45,12 @@ public class Worker implements Runnable
 			try {
 				Task task = queue.take();
 				task.work();
-				activity.runOnUiThread(task);
+				UiThreadUtil.runOnUiThread(task);
 			} catch (final Throwable x) {
 				Log.e("MuPDF Worker", x.getMessage());
-				activity.runOnUiThread(new Runnable() {
+				UiThreadUtil.runOnUiThread(new Runnable() {
 					public void run() {
-						Toast.makeText(activity, x.getMessage(), Toast.LENGTH_SHORT).show();
+						Toast.makeText(context, x.getMessage(), Toast.LENGTH_SHORT).show();
 					}
 				});
 			}
