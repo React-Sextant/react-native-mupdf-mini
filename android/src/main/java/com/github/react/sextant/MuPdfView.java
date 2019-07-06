@@ -421,6 +421,12 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
         }
     }
 
+    // page start from 1
+    public void setPage(int page) {
+        this.currentPage = page>1?page-1:0;
+        loadPage();
+    }
+
 
     /**
      * Native Props
@@ -593,6 +599,16 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
                             for (Quad hit : hits)
                                 hit.transform(ctm);
                     }
+
+                    //RN:Send Event
+                    WritableMap event = Arguments.createMap();
+                    event.putString("message", "pageChanged|"+pageNumber);
+                    ReactContext reactContext = (ReactContext)getContext();
+                    reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+                            getId(),
+                            "topChange",
+                            event
+                    );
                 } catch (Throwable x) {
                     Log.e(APP, "loadPage:"+x.getMessage());
                 }

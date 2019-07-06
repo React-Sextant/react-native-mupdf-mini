@@ -53,4 +53,10 @@ public class RCTMuPdfManager extends SimpleViewManager<MuPdfView> {
     public void setPath(MuPdfView mupdfView, String path) {
         mupdfView.setPath(path);
     }
+
+    // page start from 1
+    @ReactProp(name = "page")
+    public void setPage(MuPdfView mupdfView, int page) {
+        mupdfView.setPage(page);
+    }
 }
