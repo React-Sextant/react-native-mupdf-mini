@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 dependencies {
 
-    compile 'com.artifex.mupdf:fitz:1.15.0'
+    compile 'com.artifex.mupdf:fitz:1.16.1'
     compile "com.facebook.react:react-native:+"
 
 }

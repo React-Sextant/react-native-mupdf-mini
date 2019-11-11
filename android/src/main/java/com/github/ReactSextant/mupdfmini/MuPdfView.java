@@ -1,4 +1,4 @@
-package com.github.react.sextant;
+package com.github.ReactSextant.mupdfmini;
 
 import android.content.SharedPreferences;
 import android.view.View;
