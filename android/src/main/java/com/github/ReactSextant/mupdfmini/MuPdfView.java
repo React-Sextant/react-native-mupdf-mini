@@ -1,92 +1,51 @@
 package com.github.ReactSextant.mupdfmini;
 
-import android.content.SharedPreferences;
-import android.view.View;
-import android.util.AttributeSet;
-import android.view.MotionEvent;
-import android.graphics.Canvas;
-import android.graphics.Bitmap;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.view.GestureDetector;
-import android.view.ScaleGestureDetector;
-import android.widget.EditText;
-import android.widget.PopupMenu;
-import android.widget.Scroller;
-import android.widget.SeekBar;
-import android.widget.TextView;
-import android.app.Activity;
+import com.artifex.mupdf.fitz.*;
+import com.artifex.mupdf.fitz.android.AndroidDrawDevice;
+import com.facebook.react.uimanager.ThemedReactContext;
+
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.net.Uri;
-import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
-import android.util.DisplayMetrics;
+import android.util.AttributeSet;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.MenuItem;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.PopupMenu;
-import android.widget.SeekBar;
+import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Stack;
-import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-
-
-import com.facebook.react.bridge.NativeModule;
-import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.uimanager.SimpleViewManager;
-import com.facebook.react.uimanager.ThemedReactContext;
-import com.facebook.react.uimanager.annotations.ReactProp;
-import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.facebook.react.common.MapBuilder;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.facebook.common.logging.FLog;
-import com.facebook.react.common.ReactConstants;
-
-import static java.lang.String.format;
-import java.lang.ClassCastException;
-import java.util.ArrayList;
+import java.io.InputStream;
 import java.util.Stack;
 
-import com.artifex.mupdf.fitz.*;
-import com.artifex.mupdf.fitz.android.*;
+public class MuPdfView extends View implements
+        GestureDetector.OnGestureListener,
+        ScaleGestureDetector.OnScaleGestureListener
+{
 
-public class MuPdfView extends View implements GestureDetector.OnGestureListener,
-        ScaleGestureDetector.OnScaleGestureListener {
     private ThemedReactContext context;
 
-
-    private final String APP = "MuPDF";
-
+    private final String APP = "MuPDFMini";
 
 
-    //Event props
     protected Worker worker;
-    protected SharedPreferences prefs;
 
     protected Document doc;
 
-    String key;
+    protected String key;
     protected String path;
     protected String mimetype;
     protected byte[] buffer;
@@ -97,6 +56,11 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
     protected String title;
     protected float layoutW, layoutH, layoutEm;
     protected float displayDPI;
+    protected int canvasW, canvasH;
+    protected float pageZoom;
+
+    protected EditText searchText;
+    protected TextView pageLabel;
 
     protected int pageCount;
     protected int currentPage;
@@ -106,12 +70,9 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
     protected Stack<Integer> history;
     protected boolean wentBack;
 
-
-    //UI props
-    protected float viewScale, minScale, maxScale;
+    protected float pageScale, viewScale, minScale, maxScale;
     protected Bitmap bitmap;
     protected int bitmapW, bitmapH;
-    protected int canvasW, canvasH;
     protected int scrollX, scrollY;
     protected Link[] links;
     protected Quad[] hits;
@@ -126,21 +87,19 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
     protected Paint linkPaint;
     protected Paint hitPaint;
 
-    private static MuPdfView instance = null;
-
     public MuPdfView(ThemedReactContext ctx, AttributeSet atts) {
         super(ctx, atts);
 
+        this.context = ctx;
+
         worker = new Worker(ctx);
         worker.start();
-
-        this.context = ctx;
-        this.instance = this;
 
         scroller = new Scroller(ctx);
         detector = new GestureDetector(ctx, this);
         scaleDetector = new ScaleGestureDetector(ctx, this);
 
+        pageScale = 1;
         viewScale = 1;
         minScale = 1;
         maxScale = 2;
@@ -174,18 +133,21 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
         invalidate();
     }
 
-    public void setBitmap(Bitmap b, boolean wentBack, Link[] ls, Quad[] hs) {
+    public void setBitmap(Bitmap b, float zoom, boolean wentBack, Link[] ls, Quad[] hs) {
         if (bitmap != null)
             bitmap.recycle();
         error = false;
         links = ls;
         hits = hs;
         bitmap = b;
-        bitmapW = (int)(bitmap.getWidth() * viewScale);
-        bitmapH = (int)(bitmap.getHeight() * viewScale);
+        bitmapW = (int)(bitmap.getWidth() * viewScale / zoom);
+        bitmapH = (int)(bitmap.getHeight() * viewScale / zoom);
         scroller.forceFinished(true);
-        scrollX = wentBack ? bitmapW - canvasW : 0;
-        scrollY = wentBack ? bitmapH - canvasH : 0;
+        if (pageScale == zoom) {
+            scrollX = wentBack ? bitmapW - canvasW : 0;
+            scrollY = wentBack ? bitmapH - canvasH : 0;
+        }
+        pageScale = zoom;
         invalidate();
     }
 
@@ -271,7 +233,9 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
         return true;
     }
 
-    public boolean onScaleBegin(ScaleGestureDetector det) { return true; }
+    public boolean onScaleBegin(ScaleGestureDetector det) {
+        return true;
+    }
 
     public boolean onScale(ScaleGestureDetector det) {
         if (bitmap != null) {
@@ -283,8 +247,8 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
             viewScale *= scaleFactor;
             if (viewScale < minScale) viewScale = minScale;
             if (viewScale > maxScale) viewScale = maxScale;
-            bitmapW = (int)(bitmap.getWidth() * viewScale);
-            bitmapH = (int)(bitmap.getHeight() * viewScale);
+            bitmapW = (int)(bitmap.getWidth() * viewScale / pageScale);
+            bitmapH = (int)(bitmap.getHeight() * viewScale / pageScale);
             scrollX = (int)(pageFocusX * viewScale - focusX);
             scrollY = (int)(pageFocusY * viewScale - focusY);
             scroller.forceFinished(true);
@@ -293,42 +257,27 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
         return true;
     }
 
-    public void onScaleEnd(ScaleGestureDetector det) { }
+    public void onScaleEnd(ScaleGestureDetector det) {
+        onPageViewZoomChanged(viewScale);
+    }
 
     public void goBackward() {
-        scroller.forceFinished(true);
-        if (scrollY <= 0) {
-            if (scrollX <= 0) {
-                if (currentPage > 0) {
-                    wentBack = true;
-                    currentPage --;
-                    loadPage();
-                }
-                return;
-            }
-            scroller.startScroll(scrollX, scrollY, -canvasW * 9 / 10, bitmapH - canvasH - scrollY, 500);
-        } else {
-            scroller.startScroll(scrollX, scrollY, 0, -canvasH * 9 / 10, 250);
+        if (currentPage > 0) {
+            wentBack = true;
+            currentPage --;
+            loadPage();
         }
-        invalidate();
     }
 
     public void goForward() {
-        scroller.forceFinished(true);
-        if (scrollY + canvasH >= bitmapH) {
-            if (scrollX + canvasW >= bitmapW) {
-                if (currentPage < pageCount - 1) {
-                    currentPage ++;
-                    loadPage();
-                }
-                return;
-            }
-            scroller.startScroll(scrollX, scrollY, canvasW * 9 / 10, -scrollY, 500);
-        } else {
-            scroller.startScroll(scrollX, scrollY, 0, canvasH * 9 / 10, 250);
+        if (currentPage < pageCount - 1) {
+            currentPage ++;
+            loadPage();
         }
-        invalidate();
     }
+
+    private android.graphics.Rect dst = new android.graphics.Rect();
+    private Path _path = new Path();
 
     public void onDraw(Canvas canvas) {
         int x, y;
@@ -365,29 +314,83 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
             y = -scrollY;
         }
 
-        canvas.translate(x, y);
-        canvas.scale(viewScale, viewScale);
-        canvas.drawBitmap(bitmap, 0, 0, null);
+        dst.set(x, y, x + bitmapW, y + bitmapH);
+        canvas.drawBitmap(bitmap, null, dst, null);
 
         if (showLinks && links != null && links.length > 0) {
             for (Link link : links) {
                 Rect b = link.bounds;
-                canvas.drawRect(b.x0, b.y0, b.x1, b.y1, linkPaint);
+                canvas.drawRect(
+                        x + b.x0 * viewScale,
+                        y + b.y0 * viewScale,
+                        x + b.x1 * viewScale,
+                        y + b.y1 * viewScale,
+                        linkPaint
+                );
             }
         }
 
-        if (hits != null && hits.length > 0)
-            for (Quad q : hits)
-            {
-                Path path = new Path();
-                path.moveTo(q.ul_x, q.ul_y);
-                path.lineTo(q.ll_x, q.ll_y);
-                path.lineTo(q.lr_x, q.lr_y);
-                path.lineTo(q.ur_x, q.ur_y);
-                path.close();
-
-                canvas.drawPath(path, hitPaint);
+        if (hits != null && hits.length > 0) {
+            for (Quad q : hits) {
+                _path.rewind();
+                _path.moveTo(x + q.ul_x * viewScale, y + q.ul_y * viewScale);
+                _path.lineTo(x + q.ll_x * viewScale, y + q.ll_y * viewScale);
+                _path.lineTo(x + q.lr_x * viewScale, y + q.lr_y * viewScale);
+                _path.lineTo(x + q.ur_x * viewScale, y + q.ur_y * viewScale);
+                _path.close();
+                canvas.drawPath(_path, hitPaint);
             }
+        }
+    }
+
+    protected void loadPage() {
+        final int pageNumber = currentPage;
+        final float zoom = pageZoom;
+        stopSearch = true;
+        worker.add(new Worker.Task() {
+            public Bitmap bitmap;
+            public Link[] links;
+            public Quad[] hits;
+            public void work() {
+                try {
+                    Page page = doc.loadPage(pageNumber);
+                    Matrix ctm;
+                    if (fitPage)
+                        ctm = AndroidDrawDevice.fitPage(page, canvasW, canvasH);
+                    else
+                        ctm = AndroidDrawDevice.fitPageWidth(page, canvasW);
+                    links = page.getLinks();
+                    if (links != null)
+                        for (Link link : links)
+                            link.bounds.transform(ctm);
+                    if (searchNeedle != null) {
+                        hits = page.search(searchNeedle);
+                        if (hits != null)
+                            for (Quad hit : hits)
+                                hit.transform(ctm);
+                    }
+                    if (zoom != 1)
+                        ctm.scale(zoom);
+                    bitmap = AndroidDrawDevice.drawPage(page, ctm);
+                } catch (Throwable x) {
+                }
+            }
+            public void run() {
+                if (bitmap != null)
+                    setBitmap(bitmap, zoom, wentBack, links, hits);
+                else
+                    setError();
+                wentBack = false;
+            }
+        });
+    }
+
+    public void gotoPage(int p) {
+        if (p >= 0 && p < pageCount && p != currentPage) {
+            history.push(currentPage);
+            currentPage = p;
+            loadPage();
+        }
     }
 
     /**
@@ -427,38 +430,8 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
         loadPage();
     }
 
-
-    /**
-     * Native Props
-     * **/
-    //event
-    public void gotoPage(int p) {
-        if (p >= 0 && p < pageCount && p != currentPage) {
-            history.push(currentPage);
-            currentPage = p;
-            loadPage();
-        }
-    }
-
-    public void gotoURI(String uri) {
-        Toast.makeText(this.context, uri, Toast.LENGTH_SHORT).show();
-    }
-
-    public void toggleUI() {
-//        if (navigationBar.getVisibility() == View.VISIBLE) {
-//            currentBar.setVisibility(View.GONE);
-//            navigationBar.setVisibility(View.GONE);
-//        } else {
-//            currentBar.setVisibility(View.VISIBLE);
-//            navigationBar.setVisibility(View.VISIBLE);
-//            if (currentBar == searchBar) {
-//                searchBar.requestFocus();
-//            }
-//        }
-    }
-
-    //listen
     public void onPageViewSizeChanged(int w, int h) {
+        pageZoom = 1;
         canvasW = w;
         canvasH = h;
         layoutW = canvasW * 72 / displayDPI;
@@ -472,30 +445,19 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
             loadPage();
         }
     }
-    protected void relayoutDocument() {
-        worker.add(new Worker.Task() {
-            public void work() {
-                try {
-                    long mark = doc.makeBookmark(currentPage);
-                    Log.i(APP, "relayout document");
-                    doc.layout(layoutW, layoutH, layoutEm);
-                    pageCount = doc.countPages();
-                    currentPage = doc.findBookmark(mark);
-                } catch (Throwable x) {
-                    pageCount = 1;
-                    currentPage = 0;
-                    throw x;
-                }
-            }
-            public void run() {
-                loadPage();
-            }
-        });
+
+    public void onPageViewZoomChanged(float zoom) {
+        if (zoom != pageZoom) {
+            pageZoom = zoom;
+            loadPage();
+        }
     }
+
     protected void openDocument() {
         worker.add(new Worker.Task() {
             boolean needsPassword;
             public void work() {
+                Log.i(APP, "open document");
                 if (path != null)
                     doc = Document.openDocument(path);
                 else
@@ -510,7 +472,7 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
             }
         });
     }
-    //pdf password
+
     protected void askPassword(String message) {
         final EditText passwordView = new EditText(this.context);
         passwordView.setInputType(EditorInfo.TYPE_TEXT_VARIATION_PASSWORD);
@@ -542,6 +504,73 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
             }
         });
     }
+
+    protected void resetSearch() {
+        stopSearch = true;
+        searchHitPage = -1;
+        searchNeedle = null;
+        resetHits();
+    }
+
+    protected void runSearch(final int startPage, final int direction, final String needle) {
+        stopSearch = false;
+        worker.add(new Worker.Task() {
+            int searchPage = startPage;
+            public void work() {
+                if (stopSearch || needle != searchNeedle)
+                    return;
+                for (int i = 0; i < 9; ++i) {
+                    Log.i(APP, "search page " + searchPage);
+                    Page page = doc.loadPage(searchPage);
+                    Quad[] hits = page.search(searchNeedle);
+                    page.destroy();
+                    if (hits != null && hits.length > 0) {
+                        searchHitPage = searchPage;
+                        break;
+                    }
+                    searchPage += direction;
+                    if (searchPage < 0 || searchPage >= pageCount)
+                        break;
+                }
+            }
+            public void run() {
+                if (stopSearch || needle != searchNeedle) {
+                    pageLabel.setText((currentPage+1) + " / " + pageCount);
+                } else if (searchHitPage == currentPage) {
+                    loadPage();
+                } else if (searchHitPage >= 0) {
+                    history.push(currentPage);
+                    currentPage = searchHitPage;
+                    loadPage();
+                } else {
+                    if (searchPage >= 0 && searchPage < pageCount) {
+                        pageLabel.setText((searchPage+1) + " / " + pageCount);
+                        worker.add(this);
+                    } else {
+                        pageLabel.setText((currentPage+1) + " / " + pageCount);
+                        Log.i(APP, "search not found");
+//                        Toast.makeText(DocumentActivity.this, getString(R.string.toast_search_not_found), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+    }
+
+    protected void search(int direction) {
+        int startPage;
+        if (searchHitPage == currentPage)
+            startPage = currentPage + direction;
+        else
+            startPage = currentPage;
+        searchHitPage = -1;
+        searchNeedle = searchText.getText().toString();
+        if (searchNeedle.length() == 0)
+            searchNeedle = null;
+        if (searchNeedle != null)
+            if (startPage >= 0 && startPage < pageCount)
+                runSearch(startPage, direction, searchNeedle);
+    }
+
     protected void loadDocument() {
         worker.add(new Worker.Task() {
             public void work() {
@@ -570,56 +599,69 @@ public class MuPdfView extends View implements GestureDetector.OnGestureListener
             }
         });
     }
-    protected void loadPage() {
-        final int pageNumber = currentPage;
 
-        stopSearch = true;
+    protected void relayoutDocument() {
         worker.add(new Worker.Task() {
-        Bitmap bitmap;
-        Link[] links;
-        Quad[] hits;
             public void work() {
                 try {
-                    Log.i(APP, "load page " + pageNumber);
-                    Page page = doc.loadPage(pageNumber);
-                    Log.i(APP, "draw page " + pageNumber);
-                    Matrix ctm;
-                    if (fitPage)
-                        ctm = AndroidDrawDevice.fitPage(page, canvasW, canvasH);
-                    else
-                        ctm = AndroidDrawDevice.fitPageWidth(page, canvasW);
-                    bitmap = AndroidDrawDevice.drawPage(page, ctm);
-                    links = page.getLinks();
-                    if (links != null)
-                        for (Link link : links)
-                            link.bounds.transform(ctm);
-                    if (searchNeedle != null) {
-                        hits = page.search(searchNeedle);
-                        if (hits != null)
-                            for (Quad hit : hits)
-                                hit.transform(ctm);
-                    }
-
-                    //RN:Send Event
-                    WritableMap event = Arguments.createMap();
-                    event.putString("message", "pageChanged|"+pageNumber);
-                    ReactContext reactContext = (ReactContext)getContext();
-                    reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
-                            getId(),
-                            "topChange",
-                            event
-                    );
+                    long mark = doc.makeBookmark(currentPage);
+                    Log.i(APP, "relayout document");
+                    doc.layout(layoutW, layoutH, layoutEm);
+                    pageCount = doc.countPages();
+                    currentPage = doc.findBookmark(mark);
                 } catch (Throwable x) {
-                    Log.e(APP, "loadPage:"+x.getMessage());
+                    pageCount = 1;
+                    currentPage = 0;
+                    throw x;
                 }
             }
             public void run() {
-                if (bitmap != null)
-                    setBitmap(bitmap, wentBack, links, hits);
-                else
-                    setError();
-                wentBack = false;
+                loadPage();
+                loadOutline();
             }
         });
     }
+
+    private void loadOutline() {
+        worker.add(new Worker.Task() {
+            private void flattenOutline(Outline[] outline, String indent) {
+                for (Outline node : outline) {
+//                    if (node.title != null)
+//                        flatOutline.add(new OutlineActivity.Item(indent + node.title, node.page));
+//                    if (node.down != null)
+//                        flattenOutline(node.down, indent + "    ");
+                }
+            }
+            public void work() {
+                Log.i(APP, "load outline");
+                Outline[] outline = doc.loadOutline();
+//                if (outline != null) {
+//                    flatOutline = new ArrayList<OutlineActivity.Item>();
+//                    flattenOutline(outline, "");
+//                } else {
+//                    flatOutline = null;
+//                }
+            }
+            public void run() {
+//                if (flatOutline != null)
+//                    outlineButton.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    public void toggleUI() {
+
+    }
+
+    public void gotoURI(String uri) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET); // FLAG_ACTIVITY_NEW_DOCUMENT in API>=21
+        try {
+            context.startActivity(intent);
+        } catch (Throwable x) {
+            Log.e(APP, x.getMessage());
+            Toast.makeText(context, x.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }

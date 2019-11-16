@@ -20,5 +20,6 @@ android {
 
     packagingOptions {
         pickFirst 'lib/armeabi-v7a/libmupdf_java.so'
+        pickFirst 'lib/x86/libmupdf_java.so'
     }
 }

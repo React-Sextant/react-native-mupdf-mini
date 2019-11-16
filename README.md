@@ -15,18 +15,51 @@ allprojects {
 ## Usage
 ```jsx harmony
 import React from 'react'
-import {View,requireNativeComponent} from 'react-native'
-
-const Mupdf = requireNativeComponent("RCTMuPdf")
+import { View } from 'react-native'
+import MuPdfView from 'react-native-mupdf-mini'
 
 export default class extends React.Component {
+    static defaultProps = {
+        page:Number,
+        scale:Number,
+        minScale:Number,
+        maxScale:Number,
+    };
+    
+    search=(value,type)=>{
+        this.refs.mupdfview(value,type)
+    };
+
+    setPage=(page)=>{
+        this.refs.setPage(page)
+    };
+
+    getOutLine=async ()=>{
+        return await this.refs.mupdfview.getOutLine()
+    };
+
+    goForward=()=>{
+        this.refs.mupdfview.goForward()
+    };
+
+    goBackward=()=>{
+        this.refs.mupdfview.goBackward()
+    };
 
     render(){
         return (
             <View style={{flex:1}}>
-                <Mupdf
+                <MuPdfView
+                    ref="mupdfview"
                     style={{flex:1}}
-                    path={"/storage/emulated/0/Download/4.pdf"}
+                    path={"/storage/emulated/0/Download/pdf_t2.pdf"}
+
+                    onToggleUI={()=>{}}
+                    onPageSingleTap={(page)=>{}}
+                    onScaleChanged={(scale)=>{}}
+                    onPressLink={(uri)=>{}}
+                    onPageChanged={(page,numberOfPages)=>{}}
+                    onError={(error)=>{}}
                 />
             </View>
         )
