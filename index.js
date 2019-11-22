@@ -1,5 +1,5 @@
 import React from 'react'
-import {View, requireNativeComponent, findNodeHandle, NativeModules} from 'react-native'
+import {View, requireNativeComponent, findNodeHandle, NativeModules, UIManager} from 'react-native'
 
 const MuPdfView = requireNativeComponent("RCTMuPdfMini");
 const MuPdfModule = NativeModules.MuPdfMiniModule;
@@ -23,12 +23,17 @@ export default class extends React.Component {
     /**
      * Search text
      *
-     * @param value
-     * @param type 1:search next, -1:search forward
+     * @param startPage Int
+     * @param direction 1:search next, -1:search forward
+     * @param needle String key word
      *
      * **/
-    search=(value,type)=>{
-        MuPdfModule.search(this._handle,value,type);
+    search=(startPage, direction, needle)=>{
+        UIManager.dispatchViewManagerCommand(
+            this._handle,
+            UIManager.RCTMuPdfMini.Commands.search,
+            [startPage, direction, needle]
+        )
     };
 
     resetSearch=()=>{
@@ -41,14 +46,6 @@ export default class extends React.Component {
 
     getOutLine=async ()=>{
         return await MuPdfModule.getOutLine(this._handle)
-    };
-
-    goForward=()=>{
-        MuPdfModule.goForward(this._handle)
-    };
-
-    goBackward=()=>{
-        MuPdfModule.goBackward(this._handle)
     };
 
     render(){

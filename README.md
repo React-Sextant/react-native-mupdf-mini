@@ -15,7 +15,7 @@ allprojects {
 ## Usage
 ```jsx harmony
 import React from 'react'
-import { View } from 'react-native'
+import { View,Button } from 'react-native'
 import MuPdfView from 'react-native-mupdf-mini'
 
 export default class extends React.Component {
@@ -25,9 +25,9 @@ export default class extends React.Component {
         minScale:Number,
         maxScale:Number,
     };
-    
-    search=(value,type)=>{
-        this.refs.mupdfview(value,type)
+
+    search=()=>{
+        this.refs.mupdfview.search(1,1,"T")
     };
 
     setPage=(page)=>{
@@ -38,14 +38,6 @@ export default class extends React.Component {
         return await this.refs.mupdfview.getOutLine()
     };
 
-    goForward=()=>{
-        this.refs.mupdfview.goForward()
-    };
-
-    goBackward=()=>{
-        this.refs.mupdfview.goBackward()
-    };
-
     render(){
         return (
             <View style={{flex:1}}>
@@ -53,14 +45,27 @@ export default class extends React.Component {
                     ref="mupdfview"
                     style={{flex:1}}
                     path={"/storage/emulated/0/Download/pdf_t2.pdf"}
+                    page={1}
+                    scale={1}
+                    minScale={1}
+                    maxScale={3}
+                    pageScale={1}
+                    onLoadComplete={(numberOfPages, path, {width, height}, tableContents, outline)=>{
 
+                    }}
+                    onPageChanged={(page,numberOfPages)=>{}}
                     onToggleUI={()=>{}}
-                    onPageSingleTap={(page)=>{}}
                     onScaleChanged={(scale)=>{}}
                     onPressLink={(uri)=>{}}
-                    onPageChanged={(page,numberOfPages)=>{}}
                     onError={(error)=>{}}
+                    onChange={(event)=>{
+                        let message = event.nativeEvent.message.split('|');
+                        console.log(message)
+                    }}
                 />
+                <View>
+                    <Button title={"search"} onPress={this.search}/>
+                </View>
             </View>
         )
     }

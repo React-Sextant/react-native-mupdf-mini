@@ -2,7 +2,11 @@ package com.github.ReactSextant.mupdfmini;
 
 import com.artifex.mupdf.fitz.*;
 import com.artifex.mupdf.fitz.android.AndroidDrawDevice;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
+import com.facebook.react.uimanager.events.RCTEventEmitter;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -50,6 +54,7 @@ public class MuPdfView extends View implements
     protected String mimetype;
     protected byte[] buffer;
 
+    protected boolean disabled = false; // disallow singleTapUp to change page
     protected boolean hasLoaded;
     protected boolean isReflowable;
     protected boolean fitPage;
@@ -60,7 +65,6 @@ public class MuPdfView extends View implements
     protected float pageZoom;
 
     protected EditText searchText;
-    protected TextView pageLabel;
 
     protected int pageCount;
     protected int currentPage;
@@ -86,6 +90,7 @@ public class MuPdfView extends View implements
     protected Path errorPath;
     protected Paint linkPaint;
     protected Paint hitPaint;
+    protected String outlineStringify;
 
     public MuPdfView(ThemedReactContext ctx, AttributeSet atts) {
         super(ctx, atts);
@@ -204,8 +209,8 @@ public class MuPdfView extends View implements
         if (!foundLink) {
             float a = canvasW / 3;
             float b = a * 2;
-            if (x <= a) goBackward();
-            if (x >= b) goForward();
+            if (x <= a && !disabled) goBackward();
+            if (x >= b && !disabled) goForward();
             if (x > a && x < b) toggleUI();
         }
         invalidate();
@@ -259,6 +264,9 @@ public class MuPdfView extends View implements
 
     public void onScaleEnd(ScaleGestureDetector det) {
         onPageViewZoomChanged(viewScale);
+
+        //TODO: send onScaleChanged event
+        onScaleChanged(viewScale);
     }
 
     public void goBackward() {
@@ -381,6 +389,9 @@ public class MuPdfView extends View implements
                 else
                     setError();
                 wentBack = false;
+
+                //TODO: send onPageChanged event
+                onPageChanged(pageNumber, pageCount);
             }
         });
     }
@@ -393,9 +404,8 @@ public class MuPdfView extends View implements
         }
     }
 
-    /**
-     * React Native Bridge Event
-     * **/
+    /******************** set variable ****************************/
+
     public void setPath(String path) {
         this.path = path;
 
@@ -428,6 +438,26 @@ public class MuPdfView extends View implements
     public void setPage(int page) {
         this.currentPage = page>1?page-1:0;
         loadPage();
+    }
+
+    public void setDisabled(boolean bool){
+        disabled = bool;
+    }
+
+    public void setScale(float scale){
+        viewScale = scale;
+    }
+
+    public void setMinScale(float scale){
+        minScale = scale;
+    }
+
+    public void setMaxScale(float scale){
+        maxScale = scale;
+    }
+
+    public void setPageScale(float scale){
+        pageScale = scale;
     }
 
     public void onPageViewSizeChanged(int w, int h) {
@@ -514,6 +544,7 @@ public class MuPdfView extends View implements
 
     protected void runSearch(final int startPage, final int direction, final String needle) {
         stopSearch = false;
+        searchNeedle = needle;
         worker.add(new Worker.Task() {
             int searchPage = startPage;
             public void work() {
@@ -535,19 +566,19 @@ public class MuPdfView extends View implements
             }
             public void run() {
                 if (stopSearch || needle != searchNeedle) {
-                    pageLabel.setText((currentPage+1) + " / " + pageCount);
+//                    pageLabel.setText((currentPage+1) + " / " + pageCount);
                 } else if (searchHitPage == currentPage) {
                     loadPage();
                 } else if (searchHitPage >= 0) {
-                    history.push(currentPage);
+//                    history.push(currentPage);
                     currentPage = searchHitPage;
                     loadPage();
                 } else {
                     if (searchPage >= 0 && searchPage < pageCount) {
-                        pageLabel.setText((searchPage+1) + " / " + pageCount);
+//                        pageLabel.setText((searchPage+1) + " / " + pageCount);
                         worker.add(this);
                     } else {
-                        pageLabel.setText((currentPage+1) + " / " + pageCount);
+//                        pageLabel.setText((currentPage+1) + " / " + pageCount);
                         Log.i(APP, "search not found");
 //                        Toast.makeText(DocumentActivity.this, getString(R.string.toast_search_not_found), Toast.LENGTH_SHORT).show();
                     }
@@ -596,6 +627,9 @@ public class MuPdfView extends View implements
                 if (currentPage < 0 || currentPage >= pageCount)
                     currentPage = 0;
                 loadPage();
+
+                //TODO: send loadComplete event
+                loadComplete(pageCount);
             }
         });
     }
@@ -626,31 +660,40 @@ public class MuPdfView extends View implements
         worker.add(new Worker.Task() {
             private void flattenOutline(Outline[] outline, String indent) {
                 for (Outline node : outline) {
-//                    if (node.title != null)
-//                        flatOutline.add(new OutlineActivity.Item(indent + node.title, node.page));
-//                    if (node.down != null)
-//                        flattenOutline(node.down, indent + "    ");
+                    if (node.title != null)
+                        outlineStringify += "{\"title\":"+node.title+",\"page\":"+node.page+"}";
+                    if (node.down != null)
+                        outlineStringify += "{\"down\":"+node.down+"}";
                 }
             }
             public void work() {
                 Log.i(APP, "load outline");
                 Outline[] outline = doc.loadOutline();
-//                if (outline != null) {
-//                    flatOutline = new ArrayList<OutlineActivity.Item>();
-//                    flattenOutline(outline, "");
-//                } else {
-//                    flatOutline = null;
-//                }
+                if (outline != null) {
+                    outlineStringify = "[";
+                    flattenOutline(outline, "");
+                }
             }
             public void run() {
-//                if (flatOutline != null)
-//                    outlineButton.setVisibility(View.VISIBLE);
+                //TODO: send outline data
+                if (outlineStringify != null){
+                    outlineStringify+="]";
+                }
+
             }
         });
     }
 
     public void toggleUI() {
-
+        //TODO: send toggleUI event
+        WritableMap event = Arguments.createMap();
+        event.putString("message", "toggleUI");
+        ReactContext reactContext = (ReactContext)this.getContext();
+        reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+                this.getId(),
+                "topChange",
+                event
+        );
     }
 
     public void gotoURI(String uri) {
@@ -662,6 +705,43 @@ public class MuPdfView extends View implements
             Log.e(APP, x.getMessage());
             Toast.makeText(context, x.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /************** React Native onChange ************************/
+
+    public void onPageChanged(int page, int numberOfPages){
+        WritableMap event = Arguments.createMap();
+        event.putString("message", "pageChanged|"+page+"|"+numberOfPages);
+        ReactContext reactContext = (ReactContext)this.getContext();
+        reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+                this.getId(),
+                "topChange",
+                event
+        );
+    }
+
+    public void loadComplete(int numberOfPages) {
+        WritableMap event = Arguments.createMap();
+        event.putString("message", "loadComplete|"+numberOfPages+"|"+layoutW+"|"+layoutH);
+
+        ReactContext reactContext = (ReactContext)this.getContext();
+        reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+                this.getId(),
+                "topChange",
+                event
+        );
+    }
+
+    public void onScaleChanged(float scale){
+        WritableMap event = Arguments.createMap();
+        event.putString("message", "scaleChanged|"+scale);
+
+        ReactContext reactContext = (ReactContext)this.getContext();
+        reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
+                this.getId(),
+                "topChange",
+                event
+        );
     }
 
 }
