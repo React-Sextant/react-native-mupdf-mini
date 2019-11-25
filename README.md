@@ -16,7 +16,7 @@ allprojects {
 ```jsx harmony
 import React from 'react'
 import { View,Button } from 'react-native'
-import MuPdfView from 'react-native-mupdf-mini'
+import MuPdfMini from 'react-native-mupdf-mini'
 
 export default class extends React.Component {
     static defaultProps = {
@@ -41,7 +41,7 @@ export default class extends React.Component {
     render(){
         return (
             <View style={{flex:1}}>
-                <MuPdfView
+                <MuPdfMini
                     ref="mupdfview"
                     style={{flex:1}}
                     path={"/storage/emulated/0/Download/pdf_t2.pdf"}
