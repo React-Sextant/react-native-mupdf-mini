@@ -1,7 +1,10 @@
 package com.github.ReactSextant.mupdfmini;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.support.annotation.Nullable;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
@@ -12,12 +15,13 @@ import com.facebook.react.uimanager.annotations.ReactProp;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.lang.String.format;
+import javax.annotation.Nullable;
 
 public class RCTMuPdfManager extends SimpleViewManager<MuPdfView> {
     private static final String REACT_CLASS = "RCTMuPdfMini";
 
     public static final int COMMAND_SEARCH = 1;
+    public static final int COMMAND_RESET_SEARCH = 2;
 
     private Context context;
     private MuPdfView mupdfView;
@@ -43,12 +47,19 @@ public class RCTMuPdfManager extends SimpleViewManager<MuPdfView> {
         mupdfView = null;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @Override
+    public void onAfterUpdateTransaction(MuPdfView mupdfView) {
+        if(mupdfView.isLayoutDirectionResolved())
+            mupdfView.render();
+    }
 
     @Override
     public Map<String,Integer> getCommandsMap() {
         Map<String, Integer> map = new HashMap<>();
 
         map.put("search", COMMAND_SEARCH);
+        map.put("resetSearch", COMMAND_RESET_SEARCH);
 
         return map;
     }
@@ -57,8 +68,18 @@ public class RCTMuPdfManager extends SimpleViewManager<MuPdfView> {
     public void receiveCommand(MuPdfView mupdfView, int commandType, @Nullable ReadableArray args){
         switch (commandType) {
             case COMMAND_SEARCH: {
-                mupdfView.runSearch(args.getInt(0),args.getInt(1),args.getString(2));
+                mupdfView.search(args.getInt(0),args.getInt(1),args.getString(2));
+                return;
             }
+            case COMMAND_RESET_SEARCH: {
+                mupdfView.resetSearch();
+                return;
+            }
+            default:
+                throw new IllegalArgumentException(String.format(
+                        "Unsupported command %d received by %s.",
+                        commandType,
+                        getClass().getSimpleName()));
         }
     }
 
@@ -67,34 +88,29 @@ public class RCTMuPdfManager extends SimpleViewManager<MuPdfView> {
         mupdfView.setPath(path);
     }
 
-    // page start from 1
     @ReactProp(name = "page")
     public void setPage(MuPdfView mupdfView, int page) {
         mupdfView.setPage(page);
     }
 
-    @ReactProp(name = "disabled")
-    public void setDisabled(MuPdfView mupdfView, boolean disabled) {
-        mupdfView.setDisabled(disabled);
-    }
 
     @ReactProp(name = "scale")
-    public void setScale(MuPdfView mupdfView, int page) {
-        mupdfView.setScale((float)page);
+    public void setScale(MuPdfView mupdfView, float scale) {
+        mupdfView.setScale(scale);
     }
 
     @ReactProp(name = "minScale")
-    public void setMinScale(MuPdfView mupdfView, int page) {
-        mupdfView.setMinScale((float)page);
+    public void setMinScale(MuPdfView mupdfView, float minScale) {
+        mupdfView.setMinScale(minScale);
     }
 
     @ReactProp(name = "maxScale")
-    public void setMaxScale(MuPdfView mupdfView, int page) {
-        mupdfView.setMaxScale((float)page);
+    public void setMaxScale(MuPdfView mupdfView, float maxScale) {
+        mupdfView.setMaxScale(maxScale);
     }
 
-    @ReactProp(name = "pageScale")
-    public void setPageScale(MuPdfView mupdfView, int page) {
-        mupdfView.setPageScale((float)page);
+    @ReactProp(name = "password")
+    public void setPassword(MuPdfView mupdfView, String password) {
+        mupdfView.setPassword(password);
     }
 }

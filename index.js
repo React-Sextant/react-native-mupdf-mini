@@ -1,18 +1,21 @@
-import React from 'react'
-import {View, requireNativeComponent, findNodeHandle, NativeModules, UIManager} from 'react-native'
+import React from 'react';
+import {
+    requireNativeComponent,
+    findNodeHandle,
+    UIManager,
+} from 'react-native';
 
-const MuPdfView = requireNativeComponent("RCTMuPdfMini");
-const MuPdfModule = NativeModules.MuPdfMiniModule;
+const MuPdfView = requireNativeComponent('RCTMuPdfMini');
 
 export default class extends React.Component {
     static defaultProps = {
-        page:Number,
-        scale:Number,
-        minScale:Number,
-        maxScale:Number,
+        page: Number,
+        scale: Number,
+        minScale: Number,
+        maxScale: Number,
     };
 
-    _setReference = (ref) => {
+    _setReference = ref => {
         if (ref) {
             this._handle = findNodeHandle(ref);
         } else {
@@ -28,32 +31,23 @@ export default class extends React.Component {
      * @param needle String key word
      *
      * **/
-    search=(startPage, direction, needle)=>{
+    search = (startPage, direction, needle) => {
         UIManager.dispatchViewManagerCommand(
             this._handle,
             UIManager.RCTMuPdfMini.Commands.search,
-            [startPage, direction, needle]
-        )
+            [startPage, direction, needle],
+        );
     };
 
-    resetSearch=()=>{
-        MuPdfModule.resetSearch(this._handle)
-    }
-
-    setPage=(page)=>{
-        MuPdfModule.setPage(this._handle,page)
+    resetSearch = () => {
+        UIManager.dispatchViewManagerCommand(
+            this._handle,
+            UIManager.RCTMuPdfMini.Commands.resetSearch,
+            null,
+        );
     };
 
-    getOutLine=async ()=>{
-        return await MuPdfModule.getOutLine(this._handle)
-    };
-
-    render(){
-        return (
-            <MuPdfView
-                ref={this._setReference}
-                {...this.props}
-            />
-    )
+    render() {
+        return <MuPdfView ref={this._setReference} {...this.props} />;
     }
 }
