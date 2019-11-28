@@ -36,7 +36,8 @@ public class MuPdfView extends View implements
     protected GestureDetector detector;
     protected ScaleGestureDetector scaleDetector;
 
-    protected Document doc;
+    protected PDFDocument doc;
+    protected PDFPage mPDFPage;
 
     protected String path;
     protected String mimetype;
@@ -122,9 +123,9 @@ public class MuPdfView extends View implements
             public void work() {
                 Log.i(APP, "open document");
                 if (path != null)
-                    doc = Document.openDocument(path);
+                    doc = (PDFDocument) PDFDocument.openDocument(path);
                 else
-                    doc = Document.openDocument(buffer, mimetype);
+                    doc = (PDFDocument) PDFDocument.openDocument(buffer, mimetype);
                 needsPassword = doc.needsPassword();
             }
             public void run() {
@@ -205,20 +206,20 @@ public class MuPdfView extends View implements
         worker.add(new Worker.Task() {
             public void work() {
                 try {
-                    Page page = doc.loadPage(currentPage);
+                    mPDFPage = (PDFPage) doc.loadPage(currentPage);
                     Matrix ctm;
                     if (fitPage)
-                        ctm = AndroidDrawDevice.fitPage(page, canvasW, canvasH);
+                        ctm = AndroidDrawDevice.fitPage(mPDFPage, canvasW, canvasH);
                     else
-                        ctm = AndroidDrawDevice.fitPageWidth(page, canvasW);
+                        ctm = AndroidDrawDevice.fitPageWidth(mPDFPage, canvasW);
 
-                    links = page.getLinks();
+                    links = mPDFPage.getLinks();
                     if (links != null)
                         for (Link link : links)
                             link.bounds.transform(ctm);
 
                     if(key != null)
-                        hits = page.search(key);
+                        hits = mPDFPage.search(key);
                         if (hits != null)
                             for (Quad hit : hits)
                                 hit.transform(ctm);
@@ -226,7 +227,7 @@ public class MuPdfView extends View implements
                     if (zoom != 1)
                         ctm.scale(zoom);
 
-                    bitmap = AndroidDrawDevice.drawPage(page, ctm);
+                    bitmap = AndroidDrawDevice.drawPage(mPDFPage, ctm);
                 }catch (Throwable x){
                     throw x;
                 }
