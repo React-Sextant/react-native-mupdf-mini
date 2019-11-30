@@ -72,3 +72,39 @@ export default class extends React.Component {
 }
 
 ```
+
+## import com.artifex.mupdf.fitz.*;
+
+### PDFPage.java
+
+> PDFPage extends Page 
+
+|props|description|
+|----|----|
+|getAnnotations||
+|createAnnotations|❓:args|
+|deleteAnnotations||
+|widgets|❓|
+
+### PDFDocument
+
+> PDFDocument extends Document
+
+|props|description|
+|----|----|
+|`PDFObject` addImage(`Image` var1)|`PDFObject`:edit pdf|
+
+### PDFWidget
+
+> PDFWidget extends PDFAnnotation
+
+|props|description|
+|----|----|
+|`static` TYPE|mPDFPage.getAnnotations()[i].getType()|
+|TYPE_INK|15: 墨迹|
+|TYPE_STRIKE_OUT|11: 删除线|
+|TYPE_UNDERLINE|9: 下划线|
+|TYPE_HIGHLIGHT|8: 高亮|
+| - | - |
+|createAnnotation|mPDFPage.createAnnotation(PDFAnnotation.TYPE_INK).setInkList((float[][])lines);|
+

@@ -3,10 +3,15 @@ package com.github.ReactSextant.mupdfmini;
 import com.artifex.mupdf.fitz.*;
 import com.artifex.mupdf.fitz.android.AndroidDrawDevice;
 import com.facebook.react.uimanager.ThemedReactContext;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -343,6 +348,68 @@ public class MuPdfView extends View implements
         hits = null;
         invalidate();
         loadPage();
+    }
+
+    /**
+     * addAnnotation
+     *
+     * @param type eg: {@link PDFAnnotation#TYPE_INK}
+     * @param str  stringify(PDFAnnotation Data)
+     *             TYPE_INK: { path:[ [x1, y1], [x2, y2] ] }
+     * **/
+    public void addAnnotation(int type, String str){
+        try{
+            switch(type) {
+                case PDFAnnotation.TYPE_INK:
+                    loadPage();
+                    break;
+                case PDFAnnotation.TYPE_STRIKE_OUT:
+                    loadPage();
+                    break;
+                case PDFAnnotation.TYPE_UNDERLINE:
+                    loadPage();
+                    break;
+                case PDFAnnotation.TYPE_HIGHLIGHT:
+                    loadPage();
+                    break;
+            }
+        }catch (Throwable x){
+            throw x;
+        }
+    }
+
+    /**
+     * addAnnotation
+     *
+     * @param str 数据结构遵循 @github#https://github.com/instructure/pdf-annotate.js
+     * **/
+    public void addAnnotation(String str){
+        JsonParser jsonParser = new JsonParser();
+        JsonObject jsonObject = (JsonObject) jsonParser.parse(str);
+        String annotation_type = jsonObject.get("type").getAsString();
+        try{
+            switch(annotation_type) {
+                case "drawing":
+                    float [][] lines=new float[1][];
+                    //TODO: parse (String)lines to [][]
+                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_INK).setInkList(lines);
+                    loadPage();
+                    break;
+            }
+        }catch (Throwable x){
+            throw x;
+        }
+    }
+
+    /**
+     * deleteAnnotation
+     *
+     * @param index : PDFAnnotation index
+     * **/
+    public void deleteAnnotation(int index){
+        if(index >= 0 && mPDFPage.getAnnotations() != null && mPDFPage.getAnnotations().length > index)
+            mPDFPage.deleteAnnotation(mPDFPage.getAnnotations()[index]);
+            loadPage();
     }
 
     @Override
