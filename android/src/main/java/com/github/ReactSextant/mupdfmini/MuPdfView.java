@@ -396,6 +396,22 @@ public class MuPdfView extends View implements
                     mPDFPage.update();
                     loadPage();
                     break;
+                case "underline":
+                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_UNDERLINE).setQuadPoints(gson.fromJson(str, Drawing.class).lines);
+                    mPDFPage.update();
+                    loadPage();
+                    break;
+                case "highlight":
+                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_HIGHLIGHT).setQuadPoints(gson.fromJson(str, Drawing.class).lines);
+                    mPDFPage.update();
+                    loadPage();
+                    break;
+                case "strikeout":
+                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_STRIKE_OUT).setQuadPoints(gson.fromJson(str, Drawing.class).lines);
+                    mPDFPage.update();
+                    loadPage();
+                    break;
+
             }
         }catch (Throwable x){
             throw x;
@@ -497,6 +513,20 @@ public class MuPdfView extends View implements
     public boolean onTouchEvent(MotionEvent event) {
         detector.onTouchEvent(event);
         scaleDetector.onTouchEvent(event);
+        Point point1 = new Point(0,0), point2;
+
+        switch (event.getAction()){
+            case MotionEvent.ACTION_DOWN:
+                break;
+            case MotionEvent.ACTION_MOVE:
+//                point2 = new Point(event.getX(),event.getY());
+//                hits = mPDFPage.toStructuredText().highlight(point1,point2);
+//                loadPage();
+                break;
+            case MotionEvent.ACTION_OUTSIDE:
+                break;
+
+        }
         return true;
     }
 
@@ -574,6 +604,8 @@ public class MuPdfView extends View implements
 class Drawing {
     public String type;
     public float[][] lines;
+    public Quad[] hits;
+    public Rect rect;
     public String color = "#FF0000";
     public int width = 3;
 
