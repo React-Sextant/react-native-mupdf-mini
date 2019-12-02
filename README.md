@@ -82,7 +82,7 @@ export default class extends React.Component {
 |props|description|
 |----|----|
 |getAnnotations||
-|createAnnotations|❓:args|
+|createAnnotations|mPDFPage.createAnnotation(PDFAnnotation.TYPE_INK).setInkList((float[][])lines);|
 |deleteAnnotations||
 |widgets|❓|
 
@@ -106,5 +106,24 @@ export default class extends React.Component {
 |TYPE_UNDERLINE|9: 下划线|
 |TYPE_HIGHLIGHT|8: 高亮|
 | - | - |
-|createAnnotation|mPDFPage.createAnnotation(PDFAnnotation.TYPE_INK).setInkList((float[][])lines);|
+|setBorder|mPDFPage.getAnnotations()[0].setBorder(10);|
+|setColor|mPDFPage.getAnnotations()[0].setColor(parseColor("#000000"));|
+
+> parseColor()
+
+```java
+public static float[] parseColor(String str) {
+    int color = Color.parseColor(str);
+    int red = (color & 0xff0000) >> 16;
+    int green = (color & 0x00ff00) >> 8;
+    int blue = (color & 0x0000ff);
+
+    float colors[] = new float[3];
+    colors[0] = red/255f;
+    colors[1] = green/255f;
+    colors[2] = blue/255f;
+
+    return colors;
+}
+```
 

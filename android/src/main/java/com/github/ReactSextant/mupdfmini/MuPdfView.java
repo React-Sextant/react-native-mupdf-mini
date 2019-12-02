@@ -4,14 +4,13 @@ import com.artifex.mupdf.fitz.*;
 import com.artifex.mupdf.fitz.android.AndroidDrawDevice;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PointF;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -387,12 +386,14 @@ public class MuPdfView extends View implements
         JsonParser jsonParser = new JsonParser();
         JsonObject jsonObject = (JsonObject) jsonParser.parse(str);
         String annotation_type = jsonObject.get("type").getAsString();
+        Gson gson = new Gson();
         try{
             switch(annotation_type) {
                 case "drawing":
-                    float [][] lines=new float[1][];
-                    //TODO: parse (String)lines to [][]
-                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_INK).setInkList(lines);
+                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_INK).setInkList(gson.fromJson(str, Drawing.class).lines);
+                    mPDFPage.getAnnotations()[mPDFPage.getAnnotations().length-1].setColor(Drawing.parseColor(gson.fromJson(str, Drawing.class).color));
+                    mPDFPage.getAnnotations()[mPDFPage.getAnnotations().length-1].setBorder(gson.fromJson(str, Drawing.class).width);
+                    mPDFPage.update();
                     loadPage();
                     break;
             }
@@ -567,5 +568,26 @@ public class MuPdfView extends View implements
     public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
         pageZoom = viewScale;
         loadPage();
+    }
+}
+
+class Drawing {
+    public String type;
+    public float[][] lines;
+    public String color = "#FF0000";
+    public int width = 3;
+
+    public static float[] parseColor(String str) {
+        int color = Color.parseColor(str);
+        int red = (color & 0xff0000) >> 16;
+        int green = (color & 0x00ff00) >> 8;
+        int blue = (color & 0x0000ff);
+
+        float colors[] = new float[3];
+        colors[0] = red/255f;
+        colors[1] = green/255f;
+        colors[2] = blue/255f;
+
+        return colors;
     }
 }
