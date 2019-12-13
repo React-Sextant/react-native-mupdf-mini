@@ -142,6 +142,15 @@ public static float[] parseColor(String str) {
 |snapSelection|单个字符、单个单词、下划线|
 |copy|复制指定区域内的文字|
 
+1. 序列化非墨迹批注
+```java
+Rect rect = mPDFPage.getAnnotations()[index].getRect();
+Point point1 = new Point(rect.x0, rect.y0);
+Point point2 = new Point(rect.x1, rect.y1);
+hits = mPDFPage.toStructuredText().highlight(point1,point2);
+```
+
+
 ### Quad
 ```json
 {"hits": [
