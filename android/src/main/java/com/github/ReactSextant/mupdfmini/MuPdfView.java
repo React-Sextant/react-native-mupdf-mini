@@ -185,10 +185,10 @@ public class MuPdfView extends View implements
             public void work() {
                 try {
                     Log.i(APP, "relayout document");
-                    long mark = doc.makeBookmark(currentPage);
+//                    long mark = doc.makeBookmark(currentPage);
                     doc.layout(layoutW, layoutH, layoutEm);
                     pageCount = doc.countPages();
-                    currentPage = doc.findBookmark(mark);
+//                    currentPage = doc.findBookmark(mark);
                 } catch (Throwable x) {
                     pageCount = 1;
                     currentPage = 0;
@@ -397,17 +397,17 @@ public class MuPdfView extends View implements
                     loadPage();
                     break;
                 case "underline":
-                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_UNDERLINE).setQuadPoints(gson.fromJson(str, Drawing.class).lines);
+                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_UNDERLINE).setQuadPoints(gson.fromJson(str, Drawing.class).hits);
                     mPDFPage.update();
                     loadPage();
                     break;
                 case "highlight":
-                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_HIGHLIGHT).setQuadPoints(gson.fromJson(str, Drawing.class).lines);
+                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_HIGHLIGHT).setQuadPoints(gson.fromJson(str, Drawing.class).hits);
                     mPDFPage.update();
                     loadPage();
                     break;
                 case "strikeout":
-                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_STRIKE_OUT).setQuadPoints(gson.fromJson(str, Drawing.class).lines);
+                    mPDFPage.createAnnotation(PDFAnnotation.TYPE_STRIKE_OUT).setQuadPoints(gson.fromJson(str, Drawing.class).hits);
                     mPDFPage.update();
                     loadPage();
                     break;
@@ -603,7 +603,7 @@ public class MuPdfView extends View implements
 
 class Drawing {
     public String type;
-    public float[][] lines;
+    public Point[][] lines;
     public Quad[] hits;
     public Rect rect;
     public String color = "#FF0000";
