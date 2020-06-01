@@ -8,6 +8,9 @@ allprojects {
 	repositories {
 	    ...
 	    maven { url 'http://maven.ghostscript.com/' } //add here
+
+	    //国内下载不了就用这个镜像
+	    maven { url 'https://luokun.oss-cn-hangzhou.aliyuncs.com/ghostscript' } // CHINA!
 	}
 }
 ```
