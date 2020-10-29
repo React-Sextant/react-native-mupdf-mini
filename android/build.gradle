@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 dependencies {
 
-    implementation 'com.artifex.mupdf:fitz:1.17.0'
+    implementation 'com.artifex.mupdf:fitz:1.18.0'
     implementation 'com.google.code.gson:gson:2.6.2'
     implementation "com.facebook.react:react-native:+"
 
